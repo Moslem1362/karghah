@@ -1,0 +1,180 @@
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f172a"><link rel="apple-touch-icon" href="icon-192.png">
+<title>حساب کارگاه</title>
+<style>
+.hero{text-align:center;margin:6px 0 4px}.hero img{width:120px;height:120px;border-radius:28px;box-shadow:0 0 30px #22d3ee66,0 6px 18px #0008;border:2px solid #22d3ee55}.hero h2{color:#fff;margin:10px 0 2px;font-size:22px;text-shadow:0 0 14px #22d3ee88}.hero p{color:#67e8f9;margin:0;font-size:13px}
+.tile{transition:transform .15s;background:linear-gradient(180deg,#fff,#eef2f7)}.tile:active{transform:scale(.95)}
+header{background:#0f172acc;backdrop-filter:blur(6px);position:sticky;top:0;z-index:5;border-bottom:1px solid #22d3ee44}
+*{box-sizing:border-box}
+body{font-family:Tahoma,sans-serif;margin:0;min-height:100vh;color:#222;
+background:radial-gradient(circle at 20% 10%,#334155,#0f172a 70%)}
+header{display:flex;align-items:center;justify-content:space-between;color:#fff;padding:14px 16px;font-size:18px;font-weight:bold}
+header button{background:#ffffff22;color:#fff;border:0;border-radius:10px;padding:6px 12px;font:inherit}
+main{padding:12px;max-width:800px;margin:auto}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.tile{background:#fff;border-radius:18px;border-top:6px solid var(--c);padding:22px 8px;text-align:center;font-size:16px;font-weight:bold;box-shadow:0 4px 12px #0005;cursor:pointer;position:relative}
+.tile i{display:block;font-style:normal;font-size:44px;margin-bottom:8px}
+.tile .bd{position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;border-radius:50%;min-width:24px;height:24px;font-size:12px;line-height:24px}
+.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0002}
+.card h4{margin:0 0 8px;color:#1e293b}
+label.l{display:block;font-size:12px;color:#666;margin-top:6px}
+input,select,button{font:inherit;padding:10px;margin:3px 0;box-sizing:border-box}
+input,select{width:100%;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc}
+.b{background:#2563eb;color:#fff;border:0;border-radius:10px;padding:10px 14px}
+.w{width:100%}.r{background:#dc2626}.g{background:#64748b}.gr{background:#16a34a}.s{padding:5px 9px;font-size:12px}
+.row{display:flex;gap:6px;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;padding:8px 0}
+.row small{color:#777}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+table{width:100%;border-collapse:collapse}td,th{border:1px solid #aaa;padding:6px;text-align:center;font-size:13px}
+th{background:#e2e8f0}.tot td{font-weight:bold;background:#f3f4f6}
+.debt{background:linear-gradient(135deg,#b91c1c,#ef4444);color:#fff;border-radius:12px;padding:14px;margin-top:12px;display:flex;justify-content:space-between;font-size:17px;font-weight:bold}
+.debt.ok{background:linear-gradient(135deg,#15803d,#22c55e)}
+.red{color:#dc2626}.hide{display:none}
+@media print{header,.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}.debt{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<header><button id="back" class="hide" onclick="go('home')">بازگشت</button><span id="title">حساب کارگاه طاها</span><span style="width:60px"></span></header>
+<main id="m"></main>
+<script>
+let D=JSON.parse(localStorage.getItem('karg')||'null')||{types:[],custs:[],entries:[],pays:[],invs:[],n:1,invn:1};
+D.invs=D.invs||[];
+const save=()=>localStorage.setItem('karg',JSON.stringify(D));
+const id=()=>D.n++;
+function j(gy,gm,gd){const g=[0,31,59,90,120,151,181,212,243,273,304,334];let gy2=gm>2?gy+1:gy;
+let days=355666+365*gy+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)+gd+g[gm-1];
+let jy=-1595+33*Math.floor(days/12053);days%=12053;jy+=4*Math.floor(days/1461);days%=1461;
+if(days>365){jy+=Math.floor((days-1)/365);days=(days-1)%365}
+let jm=days<186?1+Math.floor(days/31):7+Math.floor((days-186)/30),jd=1+(days<186?days%31:(days-186)%30);
+return jy+'/'+String(jm).padStart(2,'0')+'/'+String(jd).padStart(2,'0')}
+const today=()=>{const d=new Date();return j(d.getFullYear(),d.getMonth()+1,d.getDate())};
+const en=s=>String(s).replace(/[۰-۹]/g,c=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(c)).replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/[٬,\s]/g,'');
+const num=s=>parseInt(en(s))||0;
+const fa=n=>Number(n).toLocaleString('fa-IR');
+const $=x=>document.getElementById(x);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const T=i=>D.types.find(t=>t.id==i)||{};
+const C=i=>D.custs.find(t=>t.id==i)||{name:'—'};
+const eTotal=e=>e.qty*e.price;
+const bal=c=>D.entries.filter(e=>e.c==c).reduce((s,e)=>s+eTotal(e),0)-D.pays.filter(p=>p.c==c).reduce((s,p)=>s+p.amt,0);
+const opts=(a,f)=>a.map(x=>`<option value="${x.id}">${esc(f(x))}</option>`).join('');
+const PAGES={
+ entry:{t:'ثبت مونتاژ',c:'#f97316',i:'🔧',f:entry},
+ types:{t:'تعریف تابلو',c:'#2563eb',i:'📋',f:types},
+ cust:{t:'مشتری و دریافتی',c:'#16a34a',i:'💰',f:cust},
+ inv:{t:'فاکتور',c:'#9333ea',i:'🧾',f:inv},
+ data:{t:'پشتیبان',c:'#64748b',i:'💾',f:data}};
+function go(p){
+ if(p=='home'){$('title').textContent='حساب کارگاه طاها';$('back').classList.add('hide');
+  $('m').innerHTML=`<div class="hero"><img src="logo.png" alt=""><h2>حساب کارگاه طاها</h2><p>ثبت کار • فاکتور • دریافتی</p></div><div class="tiles">${Object.entries(PAGES).map(([k,v])=>{const b=k=='entry'?D.entries.filter(e=>!e.inv).length:0;return `<div class="tile" style="--c:${v.c}" onclick="go('${k}')">${b?`<span class="bd">${fa(b)}</span>`:''}<i>${v.i}</i>${v.t}</div>`}).join('')}</div>
+  <p style="color:#cbd5e1;text-align:center;margin-top:18px;font-size:13px">مبالغ به تومان • داده‌ها روی همین مرورگر ذخیره است</p>`;return}
+ $('title').textContent=PAGES[p].t;$('back').classList.remove('hide');PAGES[p].f();window.scrollTo(0,0)}
+
+function types(){
+$('m').innerHTML=`<div class="card"><h4>تعریف تابلو</h4>
+<input id="tn" placeholder="نام تابلو (مثلاً هیدرولیم)"><input id="tw" inputmode="numeric" placeholder="دستمزد (تومان)">
+<button class="b w" onclick="addType()">ذخیره</button></div>
+<div class="card">${D.types.map(t=>`<div class="row"><span><b>${esc(t.name)}</b><br><small>${fa(t.price)} تومان</small></span>
+<span><button class="b g s" onclick="editType(${t.id})">قیمت</button> <button class="b r s" onclick="delType(${t.id})">حذف</button></span></div>`).join('')||'هنوز تابلویی تعریف نشده'}</div>`}
+function addType(){const name=$('tn').value.trim();if(!name)return alert('نام را وارد کنید');
+D.types.push({id:id(),name,price:num($('tw').value)});save();types()}
+function editType(i){const t=T(i),p=prompt('دستمزد جدید (ثبت‌های قبلی تغییر نمی‌کنند):',t.price);if(p!==null){t.price=num(p);save();types()}}
+function delType(i){if(confirm('حذف شود؟')){D.types=D.types.filter(t=>t.id!=i);save();types()}}
+
+function entry(){
+$('m').innerHTML=`<div class="card"><h4>ثبت تابلوی مونتاژشده</h4>
+<label class="l">مشتری</label><select id="ec">${opts(D.custs,c=>c.name)}</select>
+<label class="l">نام تابلو</label><select id="et" onchange="$('ep').value=T(this.value).price||''">${opts(D.types,t=>t.name)}</select>
+<div class="grid"><div><label class="l">توان kW (اجباری)</label><input id="epw" inputmode="decimal" placeholder="مثلاً 15"></div>
+<div><label class="l">ورژن</label><select id="ev" onchange="$('evo').classList.toggle('hide',this.value!='سایر')"><option>مهرگستر</option><option>کارن</option><option>سایر</option></select></div></div>
+<input id="evo" class="hide" placeholder="نام ورژن دیگر">
+<label class="l">برند اینورتر (اختیاری)</label><input id="ei" placeholder="در صورت داشتن">
+<label class="l">شماره سفارش (اختیاری)</label><input id="eo">
+<div class="grid"><div><label class="l">تعداد</label><input id="eq" inputmode="numeric" value="1"></div><div><label class="l">دستمزد واحد</label><input id="ep" inputmode="numeric"></div></div>
+<label class="l">تاریخ</label><input id="ed" value="${today()}">
+<button class="b w" onclick="addEntry()">ثبت</button>
+${D.custs.length&&D.types.length?'':'<p class="red">اول تابلو و مشتری تعریف کنید.</p>'}</div>
+<div class="card"><h4>آخرین ثبت‌ها</h4>${D.entries.slice(-30).reverse().map(e=>`<div class="row"><span>${esc(e.tn)} × ${fa(e.qty)}<br><small>${esc(C(e.c).name)} • ${e.d} ${e.o?'• سفارش '+esc(e.o):''} ${e.inv?'• فاکتور '+fa(e.inv):''}</small></span>
+<span>${fa(eTotal(e))}<br><button class="b g s" onclick="editEntry(${e.id})">ویرایش</button> <button class="b r s" onclick="delEntry(${e.id})">×</button></span></div>`).join('')}</div>`;
+if(D.types[0])$('ep').value=D.types[0].price}
+function addEntry(){const t=T($('et').value),c=$('ec').value,pw=en($('epw').value);
+if(!t.id||!c)return alert('مشتری و تابلو را انتخاب کنید');
+if(!pw||isNaN(pw))return alert('توان اجباری است');
+let v=$('ev').value;if(v=='سایر')v=$('evo').value.trim()||'سایر';
+const name=`${t.name} ${pw}kW ${v?'- '+v:''} ${$('ei').value.trim()?'- اینورتر '+$('ei').value.trim():''}`.replace(/\s+/g,' ').trim();
+D.entries.push({id:id(),c:+c,t:t.id,tn:name,qty:num($('eq').value)||1,price:num($('ep').value),o:$('eo').value.trim(),d:en($('ed').value),inv:0});save();entry()}
+function editEntry(i){const e=D.entries.find(x=>x.id==i);if(!e)return;
+const q=prompt('تعداد:',e.qty);if(q===null)return;const p=prompt('دستمزد واحد:',e.price);if(p===null)return;
+const o=prompt('شماره سفارش:',e.o);if(o===null)return;const d=prompt('تاریخ:',e.d);if(d===null)return;
+e.qty=num(q)||1;e.price=num(p);e.o=o.trim();e.d=en(d);save();
+alert('ویرایش شد. اگر این ردیف در فاکتور بوده، فاکتور را از تب فاکتور ویرایش کنید.');entry()}
+function delEntry(i){const e=D.entries.find(x=>x.id==i);if(e.inv&&!confirm('این ردیف در فاکتور ثبت شده. اول فاکتور را حذف کنید. ادامه؟'))return;
+if(!e.inv&&!confirm('حذف شود؟'))return;D.entries=D.entries.filter(x=>x.id!=i);save();entry()}
+
+function cust(){
+$('m').innerHTML=`<div class="card"><h4>مشتری جدید</h4><input id="cn" placeholder="نام مشتری"><button class="b w" onclick="addCust()">افزودن</button></div>
+<div class="card"><h4>ثبت دریافتی</h4><label class="l">مشتری</label><select id="pc">${opts(D.custs,c=>c.name)}</select>
+<label class="l">مبلغ (تومان)</label><input id="pa" inputmode="numeric"><label class="l">تاریخ</label><input id="pd" value="${today()}"><label class="l">توضیح</label><input id="pn" placeholder="نقد / کارت / چک">
+<button class="b w" onclick="addPay()">ثبت دریافتی</button></div>
+${D.custs.map(c=>`<div class="card"><div class="row"><b>${esc(c.name)}</b><b class="${bal(c.id)>0?'red':''}">مانده طلب: ${fa(bal(c.id))}</b></div>
+${D.pays.filter(p=>p.c==c.id).map(p=>`<div class="row"><small>${p.d} ${esc(p.n)}</small><span>${fa(p.amt)} <button class="b r s" onclick="delPay(${p.id},'cust')">×</button></span></div>`).join('')}</div>`).join('')}`}
+function addCust(){const n=$('cn').value.trim();if(n){D.custs.push({id:id(),name:n});save();cust()}}
+function addPay(){const a=num($('pa').value),c=$('pc').value;if(!a||!c)return alert('مبلغ و مشتری لازم است');
+D.pays.push({id:id(),c:+c,amt:a,d:en($('pd').value),n:$('pn').value});save();cust()}
+function delPay(i,back){if(!confirm('دریافتی حذف شود؟'))return;D.pays=D.pays.filter(p=>p.id!=i);save();back=='inv'?inv():cust()}
+
+// فاکتور: هر فاکتور یک رکورد با نسخه ثبت‌شده ردیف‌ها
+function inv(cid){
+const c=cid||($('ic')&&$('ic').value)||(D.custs[0]&&D.custs[0].id);
+$('m').innerHTML=`<div class="card noprint"><h4>صدور فاکتور</h4><select id="ic" onchange="inv(this.value)">${opts(D.custs,x=>x.name)}</select>
+<div id="il"></div><button class="b w" onclick="mkInv()">ثبت و نمایش فاکتور</button>
+<hr><h4>ثبت دریافتی (در فاکتور بعدی اعمال می‌شود)</h4><div class="grid"><input id="qa" inputmode="numeric" placeholder="مبلغ"><input id="qn" placeholder="توضیح"></div>
+<button class="b gr w" onclick="qPay()">ثبت دریافتی</button></div>
+<div class="card noprint"><h4>فاکتورهای صادرشده</h4><div id="ilist"></div></div><div id="out"></div>`;
+$('ic').value=c;invList(c);invHist(c)}
+function invList(c){
+const ed=editingInv;
+$('il').innerHTML=D.entries.filter(e=>e.c==c&&(!e.inv||(ed&&e.inv==ed.n))).map(e=>`<label class="row"><span><input type="checkbox" style="width:auto" class="ck" value="${e.id}" ${!e.inv||ed?'checked':''}> ${esc(e.tn)} × ${fa(e.qty)} <small>${e.d} ${e.o?'• سفارش '+esc(e.o):''}</small></span><span>${fa(eTotal(e))}</span></label>`).join('')||'ردیف فاکتورنشده‌ای نیست'}
+let editingInv=null;
+function invHist(c){
+const list=D.invs.filter(v=>v.c==c).slice().reverse();
+$('ilist').innerHTML=list.map(v=>`<div class="row"><span>فاکتور ${fa(v.n)} <small>${v.d} • ${fa(v.rows.length)} ردیف • ${fa(v.total)} تومان</small></span>
+<span><button class="b s" onclick="showInv(${v.n})">نمایش</button> <button class="b g s" onclick="editInv(${v.n})">ویرایش</button> <button class="b r s" onclick="delInv(${v.n})">حذف</button></span></div>`).join('')||'فاکتوری صادر نشده'}
+function qPay(){const a=num($('qa').value),c=$('ic').value;if(!a||!c)return alert('مبلغ لازم است');
+D.pays.push({id:id(),c:+c,amt:a,d:today(),n:$('qn').value});save();inv(c)}
+function mkInv(){const c=+$('ic').value,ids=[...document.querySelectorAll('.ck:checked')].map(x=>+x.value);
+if(!ids.length)return alert('حداقل یک ردیف انتخاب کنید');
+let n;
+if(editingInv){n=editingInv.n;D.entries.forEach(e=>{if(e.inv==n)e.inv=0})}
+else n=D.invn++;
+const rows=D.entries.filter(e=>ids.includes(e.id));
+rows.forEach(e=>e.inv=n);
+const total=rows.reduce((s,e)=>s+eTotal(e),0);
+const rec={n,c,d:today(),ids,rows:rows.map(e=>({tn:e.tn,o:e.o,qty:e.qty,price:e.price,d:e.d})),total};
+D.invs=D.invs.filter(v=>v.n!=n);D.invs.push(rec);
+editingInv=null;save();showInv(n)}
+function editInv(n){const v=D.invs.find(x=>x.n==n);editingInv=v;
+$('ic').value=v.c;invList(v.c);window.scrollTo(0,0);alert('ردیف‌ها را تغییر دهید و دوباره «ثبت و نمایش فاکتور» را بزنید.')}
+function delInv(n){if(!confirm('فاکتور حذف شود؟ ردیف‌ها برای فاکتور دوباره آماده می‌شوند.'))return;
+D.entries.forEach(e=>{if(e.inv==n)e.inv=0});D.invs=D.invs.filter(v=>v.n!=n);save();inv(D.invs.length?null:undefined)}
+function showInv(n){const v=D.invs.find(x=>x.n==n);if(!v)return;
+const P=D.pays.filter(p=>p.c==v.c).reduce((s,p)=>s+p.amt,0),E=D.entries.filter(e=>e.c==v.c).reduce((s,e)=>s+eTotal(e),0),rem=E-P;
+const pr=D.pays.filter(p=>p.c==v.c&&!p.used);
+$('out').innerHTML=`<div class="card"><h3 style="text-align:center;margin:4px">فاکتور شماره ${fa(v.n)}</h3>
+<p>مشتری: <b>${esc(C(v.c).name)}</b> &nbsp; تاریخ: ${v.d}</p>
+<table><tr><th>#</th><th>شرح</th><th>سفارش</th><th>تعداد</th><th>دستمزد</th><th>جمع</th></tr>
+${v.rows.map((e,i)=>`<tr><td>${fa(i+1)}</td><td>${esc(e.tn)}</td><td>${esc(e.o)}</td><td>${fa(e.qty)}</td><td>${fa(e.price)}</td><td>${fa(eTotal(e))}</td></tr>`).join('')}
+<tr class="tot"><td colspan="5">جمع فاکتور</td><td>${fa(v.total)}</td></tr>
+<tr><td colspan="5">جمع دریافتی‌ها (کل حساب)</td><td>${fa(P)}</td></tr></table>
+<div class="debt ${rem>0?'':'ok'}"><span>جمع طلب</span><span>${fa(rem)} تومان</span></div>
+<small>${rem<0?'مبلغ منفی یعنی مشتری بستانکار است. ':''}مبالغ به تومان</small>
+<p class="noprint"><button class="b w" onclick="print()">چاپ / ذخیره PDF</button></p></div>`;
+$('out').scrollIntoView()}
+
+function data(){
+$('m').innerHTML=`<div class="card"><h4>پشتیبان‌گیری</h4><p>اطلاعات داخل همین مرورگر ذخیره است. هفته‌ای یک بار فایل پشتیبان بگیرید.</p>
+<button class="b w" onclick="exp()">دانلود فایل پشتیبان</button>
+<p><input type="file" id="f" accept=".json" onchange="imp(this)"></p></div>`}
+function exp(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:'application/json'}));a.download='kargah-'+today().replace(/\//g,'-')+'.json';a.click()}
+function imp(el){const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.types)throw 0;if(confirm('اطلاعات فعلی جایگزین شود؟')){D=o;D.invs=D.invs||[];save();go('home')}}catch(e){alert('فایل معتبر نیست')}};r.readAsText(el.files[0])}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+go('home');
+</script></body></html>
